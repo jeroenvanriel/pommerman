@@ -10,6 +10,7 @@ sys.path.append(directory)
 import pommerman
 from pommerman import agents
 from serpentine.my_agent import MyAgent
+from serpentine.move_agent import MoveAgent
 
 
 def main():
@@ -20,7 +21,7 @@ def main():
 
     # Create a set of agents (exactly four)
     agent_list = [
-        MyAgent(),
+        MoveAgent(),
         agents.RandomAgent(),
         agents.SimpleAgent(),
         agents.RandomAgent(),
