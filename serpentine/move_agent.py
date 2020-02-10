@@ -21,6 +21,11 @@ class MoveAgent(BaseAgent):
         # the position that we want to reach
         goal = (5, 5)
 
+        self.moveToPosition(my_position, goal)
+
+        return self._actionQueue.get(False)
+
+    def moveToPosition(self, my_position, goal):
         # determine if we must go left or right
         if my_position[0] < goal[0]:
             # we must go to the right
@@ -36,5 +41,3 @@ class MoveAgent(BaseAgent):
         elif my_position[1] > goal[1]:
             # we are under the goal
             self._actionQueue.put(Action.Up)
-
-        return self._actionQueue.get()
