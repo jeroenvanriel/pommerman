@@ -32,7 +32,48 @@ class MoveAgent(BaseAgent):
 
         return self._actionQueue.get(False)
 
-    def moveToPosition(self, my_position, goal):
+    # check if there exists a path between start and goal
+    # TODO: backtracking of path
+    def bfs(self, nodeList, goal, visited=None):
+        newNodes = []
+
+        if visited:
+            visited = visited + nodeList
+        else:
+            visited = nodeList
+
+        for node in nodeList:
+            # if this node is the goal position
+            if node == goal:
+                return True
+
+            for child in self.getValidChildren(node):
+                if child not in newNodes and child not in visited:
+                    newNodes.append(child)
+
+        # if newNodes is not empty we must visit these next
+        if newNodes:
+            return self.bfs(newNodes, goal, visited)
+
+        # if we did not find a solution so far and newNodes is empty, we go up in the recursion
+        return False
+
+    def getValidChildren(self, node):
+        # just add all 4 neighbouring tiles
+        children = [(node[0] - 1, node[1]), (node[0] + 1, node[1]), (node[0], node[1] - 1), (node[0], node[1] + 1)]
+
+        # now we collect the valid moves
+        validChildren = []
+
+        # check if node represents a valid position on the board
+        for child in children:
+            # check if these positions are still in the range
+            if 0 <= child[0] <= 10 and 0 <= child[1] <= 10 and self.board[child[0], child[1]] == 0:
+                validChildren.append(child)
+
+        return validChildren
+
+    def moveToPosition(self, goal):
         # determine if we must go left or right
         if self.position[0] < goal[0]:
             # we must go to the right
