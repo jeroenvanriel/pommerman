@@ -13,17 +13,17 @@ class MoveAgent(BaseAgent):
         super().__init__(character)
 
         # this will hold our current position
-        self.position = None
+        self._position = None
 
         # this will hold the board state
-        self.board = None
+        self._board = None
 
         # this queue will hold the actions for future turns
         self._actionQueue = queue.SimpleQueue()
 
     def act(self, obs, action_space):
-        self.position = tuple(obs['position'])
-        self.board = obs['board']
+        self._position = tuple(obs['position'])
+        self._board = obs['board']
 
         # the position that we want to reach
         goal = (5, 5)
@@ -75,17 +75,17 @@ class MoveAgent(BaseAgent):
 
     def moveToPosition(self, goal):
         # determine if we must go left or right
-        if self.position[0] < goal[0]:
+        if self._position[0] < goal[0]:
             # we must go to the right
             self._actionQueue.put(Action.Right)
-        elif self.position[0] > goal[0]:
+        elif self._position[0] > goal[0]:
             # we must go to the left
             self._actionQueue.put(Action.Left)
 
         # determine if we must go up or down
-        if self.position[1] < goal[1]:
+        if self._position[1] < goal[1]:
             # we are above the goal
             self._actionQueue.put(Action.Down)
-        elif self.position[1] > goal[1]:
+        elif self._position[1] > goal[1]:
             # we are under the goal
             self._actionQueue.put(Action.Up)
