@@ -21,46 +21,70 @@ class MoveAgent(BaseAgent):
         # this queue will hold the actions for future turns
         self._actionQueue = queue.SimpleQueue()
 
+        self._planned = False
+
     def act(self, obs, action_space):
         self._position = tuple(obs['position'])
         self._board = obs['board']
 
+        print("position = " + str(self._position))
+
         # the position that we want to reach
         goal = (5, 5)
 
-        self.moveToPosition(goal)
+        nodes = self.bfs([((1, 1), None, None)], goal, [])
 
-        return self._actionQueue.get(False)
+        actions = []
+        for node in nodes:
+            if node[2] is not None:
+                actions.append(node[2])
+                if not self._planned:
+                    self._actionQueue.put(node[2])
+
+        self._planned = True
+
+        print("actions:")
+        print(actions)
+
+        if not self._actionQueue.empty():
+            return self._actionQueue.get(False)
+        else:
+            return Action.Stop
 
     # check if there exists a path between start and goal
-    # TODO: backtracking of path
-    def bfs(self, nodeList, goal, visited=None):
+    def bfs(self, nodeList, goal, visitedPositions):
         newNodes = []
-
-        if visited:
-            visited = visited + nodeList
-        else:
-            visited = nodeList
 
         for node in nodeList:
             # if this node is the goal position
-            if node == goal:
-                return True
+            if node[0] == goal:
+                return [node]
 
             for child in self.getValidChildren(node):
-                if child not in newNodes and child not in visited:
+                if child[0] not in visitedPositions:
+                    visitedPositions.append(node[0])
                     newNodes.append(child)
 
         # if newNodes is not empty we must visit these next
         if newNodes:
-            return self.bfs(newNodes, goal, visited)
+            result = self.bfs(newNodes, goal, visitedPositions)
+            if result is not None:
+                # add the predecessor to the beginning of the list.
+                if result[0] is not None:
+                    result.insert(0, result[0][1])
+                    return result
+                else:
+                    return result
 
         # if we did not find a solution so far and newNodes is empty, we go up in the recursion
-        return False
+        return None
 
     def getValidChildren(self, node):
-        # just add all 4 neighbouring tiles
-        children = [(node[0] - 1, node[1]), (node[0] + 1, node[1]), (node[0], node[1] - 1), (node[0], node[1] + 1)]
+        # just add all 4 neighbouring tiles and add a reference to ourselves.
+        children = [((node[0][0] - 1, node[0][1]), node, Action.Left),
+                    ((node[0][0] + 1, node[0][1]), node, Action.Right),
+                    ((node[0][0], node[0][1] - 1), node, Action.Up),
+                    ((node[0][0], node[0][1] + 1), node, Action.Down)]
 
         # now we collect the valid moves
         validChildren = []
@@ -68,10 +92,14 @@ class MoveAgent(BaseAgent):
         # check if node represents a valid position on the board
         for child in children:
             # check if these positions are still in the range
-            if 0 <= child[0] <= 10 and 0 <= child[1] <= 10 and self.board[child[0], child[1]] == 0:
+            if 0 <= child[0][0] <= 10 and 0 <= child[0][1] <= 10 and self.isValidPosition(child[0]):
                 validChildren.append(child)
 
         return validChildren
+
+    # TODO: determine whether we may move to this position
+    def isValidPosition(self, position):
+        return self._board[position[0]][position[1]] == 0
 
     def moveToPosition(self, goal):
         # determine if we must go left or right
